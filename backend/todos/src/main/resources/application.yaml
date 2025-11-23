@@ -1,0 +1,38 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /todos
+
+spring:
+  datasource:
+    # Sửa 1: Đổi protocol thành postgresql và cổng 5432
+    # (Lưu ý: Khi lên K8s, dòng này sẽ được tự động thay thế bằng biến môi trường,
+    # nhưng để localhost ở đây giúp bạn chạy test được nếu cài postgres trên máy thật)
+    url: "jdbc:postgresql://localhost:5432/todo_db"
+
+    # Sửa 2: Tài khoản khớp với cấu hình Kubernetes (db-config)
+    username: postgres
+    password: password123
+
+    # Sửa 3: Driver quan trọng nhất
+    driver-class-name: org.postgresql.Driver
+
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      auto-commit: true
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      pool-name: HikariPool
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        # Sửa 4: Đổi phương ngữ (Dialect) sang Postgres
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    # Sửa 5: Khai báo loại database
+    database: postgresql
