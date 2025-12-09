@@ -44,7 +44,7 @@ spec:
 
       containers:
         - name: user-service
-          image: taithanh/user-service:v2
+          image: taithanh/user-service:v3
           imagePullPolicy: Always
           ports:
             - containerPort: 8081

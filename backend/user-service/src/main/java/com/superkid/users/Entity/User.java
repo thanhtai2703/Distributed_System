@@ -18,10 +18,11 @@ public class User {
     @Column(nullable = false, unique = true)
     private String email;
     
-    @Column(nullable = false)
-    private String password;
-    
     private String fullName;
+    
+    private String role; // "Developer", "Designer", "Manager", etc.
+    
+    private String department; // "Engineering", "Marketing", "Sales", etc.
     
     private boolean active = true;
 }

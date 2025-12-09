@@ -59,11 +59,14 @@ public class UserService {
             if (user.getEmail() != null) {
                 existingUser.setEmail(user.getEmail());
             }
-            if (user.getPassword() != null) {
-                existingUser.setPassword(user.getPassword());
-            }
             if (user.getFullName() != null) {
                 existingUser.setFullName(user.getFullName());
+            }
+            if (user.getRole() != null) {
+                existingUser.setRole(user.getRole());
+            }
+            if (user.getDepartment() != null) {
+                existingUser.setDepartment(user.getDepartment());
             }
             existingUser.setActive(user.isActive());
             

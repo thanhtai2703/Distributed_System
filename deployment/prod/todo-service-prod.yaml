@@ -45,8 +45,8 @@ spec:
 
       containers:
         - name: todo-backend
-          # !!! QUAN TRỌNG: Sửa tên image của bạn ở dòng dưới !!!
-          image: taithanh/todo-backend:v5
+          image: taithanh/todo-backend:v6
+          imagePullPolicy: Always
           ports:
             - containerPort: 8080
           # Cấu hình kết nối Database

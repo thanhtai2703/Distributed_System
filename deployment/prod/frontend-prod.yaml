@@ -37,8 +37,7 @@ spec:
       # --- Container Configuration ---
       containers:
         - name: todo-frontend
-          # Lưu ý: Đổi image thành bản "sạch" bạn đã build (không hardcode IP)
-          image: taithanh/todo-frontend:latest
+          image: taithanh/todo-frontend:v2
           imagePullPolicy: Always
           ports:
             - containerPort: 80
