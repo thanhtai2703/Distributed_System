@@ -17,28 +17,35 @@ import { produce } from 'immer';
 import axios from 'axios';
 
 const getApiUrl = () => {
-  // Ưu tiên 1: Đọc từ ConfigMap của Kubernetes (Runtime)
   // @ts-ignore
   if (window.ENV && window.ENV.TODO_API_URL) {
-    console.log('🚀 Đang dùng Config từ K8s:', window.ENV.TODO_API_URL);
     return window.ENV.TODO_API_URL;
   }
-  // Ưu tiên 2: Đọc từ file .env (Build time - dùng cho Local Dev)
   if (import.meta.env.VITE_API_URL) {
-    console.log(
-      '⚠️ Đang dùng biến môi trường .env:',
-      import.meta.env.VITE_API_URL
-    );
     return import.meta.env.VITE_API_URL;
   }
-
-  // Ưu tiên 3: Giá trị cứng (Fallback cuối cùng)
   return 'http://localhost:8080/todos';
 };
 
-// API base URL: prefer env (set at build-time), fallback to relative path
+const getUserApiUrl = () => {
+  // @ts-ignore
+  if (window.ENV && window.ENV.USER_API_URL) {
+    return window.ENV.USER_API_URL;
+  }
+  return 'http://localhost:8081/users';
+};
+
 const API_BASE = getApiUrl();
 const API_URL = API_BASE ? `${API_BASE}/api` : '/todos/api';
+const USER_API_URL = `${getUserApiUrl()}/api`;
+
+interface UserType {
+  id: number;
+  username: string;
+  fullName: string;
+  role: string;
+  department: string;
+}
 
 function TodoMain() {
   const [value, setValue] = React.useState('');
@@ -46,24 +53,34 @@ function TodoMain() {
   const [listFilter, setListFilter] = React.useState<TodoType[]>([]);
   const [placeHolder, setPlaceHolder] = React.useState('Add task');
   const [tasks, setTasks] = React.useState<TodoType[]>([]);
+  const [users, setUsers] = React.useState<UserType[]>([]);
+  const [selectedAssignee, setSelectedAssignee] = React.useState<string>('');
 
   React.useEffect(() => {
     fetchTodos();
+    fetchUsers();
   }, []);
 
-  // --- 1. SỬA HÀM LẤY DỮ LIỆU (MAPPING) ---
+  const fetchUsers = async () => {
+    try {
+      const response = await axios.get(`${USER_API_URL}/users`);
+      setUsers(response.data);
+    } catch (error) {
+      console.error('Lỗi tải users:', error);
+    }
+  };
+
   const fetchTodos = async () => {
     try {
       const response = await axios.get(`${API_URL}/list-todo`);
 
-      // Backend trả về: { id, content, done, dueDate }
-      // Frontend cần: { id, content, checkedTodo, date }
-      // => Phải Map (chuyển đổi) lại
       const mappedData = response.data.map((task: any) => ({
         id: task.id,
         content: task.content,
-        checkedTodo: task.done, // Map 'done' -> 'checkedTodo'
-        date: task.dueDate, // Map 'dueDate' -> 'date'
+        checkedTodo: task.done,
+        date: task.dueDate,
+        assignedToUserId: task.assignedToUserId,
+        assignedToName: task.assignedToName,
         editMode: false,
       }));
 
@@ -73,31 +90,43 @@ function TodoMain() {
     }
   };
 
-  // --- 2. SỬA HÀM THÊM MỚI (SUBMIT) ---
   const handleSubmit = async () => {
     if (value === '') {
       setPlaceHolder('Please enter a task');
       return;
     }
 
-    // Tạo object chuẩn theo Todo.java
+    let assignedUserId = null;
+    let assignedName = null;
+
+    if (selectedAssignee && selectedAssignee !== 'unassigned') {
+      const assignedUser = users.find(
+        (u) => u.id.toString() === selectedAssignee
+      );
+      if (assignedUser) {
+        assignedUserId = assignedUser.id;
+        assignedName = assignedUser.fullName || assignedUser.username;
+      }
+    }
+
     const todoPayload = {
-      // KHÔNG GỬI ID (Để Backend tự sinh)
       content: value,
-      done: false, // Java cần 'done', không phải 'checkedTodo'
-      dueDate: new Date().toISOString().split('T')[0], // Java cần 'yyyy-MM-dd'
+      done: false,
+      dueDate: new Date().toISOString().split('T')[0],
+      assignedToUserId: assignedUserId,
+      assignedToName: assignedName,
     };
 
     try {
       const response = await axios.post(`${API_URL}/todo`, todoPayload);
 
-      // Backend trả về object đã lưu (có ID thật)
-      // Ta cần map lại để hiển thị lên UI
       const newTodoFromBackend = {
         id: response.data.id,
         content: response.data.content,
         checkedTodo: response.data.done,
         date: response.data.dueDate,
+        assignedToUserId: response.data.assignedToUserId,
+        assignedToName: response.data.assignedToName,
         editMode: false,
       };
 
@@ -107,6 +136,7 @@ function TodoMain() {
       setTasks(newTasks);
 
       setValue('');
+      setSelectedAssignee('');
       setPlaceHolder('Add task');
     } catch (error) {
       console.error('Lỗi thêm mới:', error);
@@ -240,46 +270,69 @@ function TodoMain() {
 
         <div className="mt-6 rounded-2xl border border-slate-200/70 dark:border-slate-700 bg-white/80 dark:bg-slate-800/70 shadow-sm backdrop-blur">
           <div className="p-4 md:p-6 border-b border-slate-100 dark:border-slate-700">
-            <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_auto] gap-3 md:gap-4 items-center">
-              <Input
-                className={cn(
-                  'border-2 focus-visible:ring-2 focus-visible:ring-offset-0',
-                  placeHolder !== 'Add task'
-                    ? 'placeholder:text-red-300 italic'
-                    : 'placeholder:text-slate-400'
-                )}
-                value={value}
-                type="text"
-                placeholder={placeHolder}
-                onKeyDown={handleKeyDown}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  handleInput(e)
-                }
-              />
-              <Select value={selectFilter} onValueChange={handleFilter}>
-                <SelectTrigger className={'border-2'}>
-                  <SelectValue
-                    defaultValue={'All'}
-                    placeholder={'All'}
-                  ></SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectLabel>Status</SelectLabel>
-                    <SelectItem value={'All'}>All</SelectItem>
-                    <SelectItem value={'Completed'}>Completed</SelectItem>
-                    <SelectItem value={'Processing'}>Processing</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-              <Button
-                className={
-                  'hover:cursor-pointer border-2 transition-colors duration-200 bg-slate-900 text-white hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600'
-                }
-                onClick={handleSubmit}
-              >
-                Add task
-              </Button>
+            <div className="grid grid-cols-1 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3">
+                <Input
+                  className={cn(
+                    'border-2 focus-visible:ring-2 focus-visible:ring-offset-0',
+                    placeHolder !== 'Add task'
+                      ? 'placeholder:text-red-300 italic'
+                      : 'placeholder:text-slate-400'
+                  )}
+                  value={value}
+                  type="text"
+                  placeholder={placeHolder}
+                  onKeyDown={handleKeyDown}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    handleInput(e)
+                  }
+                />
+                <Button
+                  className={
+                    'hover:cursor-pointer border-2 transition-colors duration-200 bg-slate-900 text-white hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600'
+                  }
+                  onClick={handleSubmit}
+                >
+                  Add task
+                </Button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <Select
+                  value={selectedAssignee}
+                  onValueChange={setSelectedAssignee}
+                >
+                  <SelectTrigger className={'border-2'}>
+                    <SelectValue placeholder="Assign to..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel>Assignee</SelectLabel>
+                      <SelectItem value="unassigned">Unassigned</SelectItem>
+                      {users.map((user) => (
+                        <SelectItem key={user.id} value={user.id.toString()}>
+                          {user.fullName || user.username} ({user.role})
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+                <Select value={selectFilter} onValueChange={handleFilter}>
+                  <SelectTrigger className={'border-2'}>
+                    <SelectValue
+                      defaultValue={'All'}
+                      placeholder={'All'}
+                    ></SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel>Status</SelectLabel>
+                      <SelectItem value={'All'}>All</SelectItem>
+                      <SelectItem value={'Completed'}>Completed</SelectItem>
+                      <SelectItem value={'Processing'}>Processing</SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
 
@@ -306,6 +359,8 @@ function TodoMain() {
                   date: current.date,
                   editMode: current.editMode,
                   checkedTodo: current.checkedTodo,
+                  assignedToUserId: current.assignedToUserId,
+                  assignedToName: current.assignedToName,
                 };
                 return (
                   <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-900/40 p-3 hover:shadow-md transition-shadow">

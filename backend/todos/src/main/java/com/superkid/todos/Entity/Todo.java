@@ -24,4 +24,7 @@ public class Todo {
     private String content;
     private boolean done;
     private LocalDate dueDate; // yyyy-MM-dd
+    
+    private Long assignedToUserId; // User ID assigned to this task
+    private String assignedToName; // Cached name for display
 }

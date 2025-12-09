@@ -10,6 +10,8 @@ interface UserType {
   username: string;
   email: string;
   fullName: string;
+  role: string;
+  department: string;
   active: boolean;
 }
 
@@ -28,7 +30,8 @@ function UserManagement() {
   const [username, setUsername] = React.useState('');
   const [email, setEmail] = React.useState('');
   const [fullName, setFullName] = React.useState('');
-  const [password, setPassword] = React.useState('');
+  const [role, setRole] = React.useState('');
+  const [department, setDepartment] = React.useState('');
   const [serviceStatus, setServiceStatus] = React.useState<
     'online' | 'offline' | 'checking'
   >('checking');
@@ -66,7 +69,7 @@ function UserManagement() {
   };
 
   const handleAddUser = async () => {
-    if (!username || !email || !password) {
+    if (!username || !email) {
       setErrorMessage('Vui lòng điền đầy đủ thông tin!');
       return;
     }
@@ -74,8 +77,9 @@ function UserManagement() {
     const userPayload = {
       username,
       email,
-      password,
       fullName: fullName || username,
+      role: role || 'Member',
+      department: department || 'General',
       active: true,
     };
 
@@ -87,7 +91,8 @@ function UserManagement() {
       setUsername('');
       setEmail('');
       setFullName('');
-      setPassword('');
+      setRole('');
+      setDepartment('');
       setErrorMessage('');
       setSuccessMessage('✅ Thêm user thành công!');
       setServiceStatus('online');
@@ -206,13 +211,22 @@ function UserManagement() {
             />
           </div>
           <div>
-            <Label htmlFor="password">Password *</Label>
+            <Label htmlFor="role">Role</Label>
             <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="******"
+              id="role"
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              placeholder="Developer, Designer, Manager..."
+              disabled={serviceStatus === 'offline'}
+            />
+          </div>
+          <div>
+            <Label htmlFor="department">Department</Label>
+            <Input
+              id="department"
+              value={department}
+              onChange={(e) => setDepartment(e.target.value)}
+              placeholder="Engineering, Marketing..."
               disabled={serviceStatus === 'offline'}
             />
           </div>
@@ -256,6 +270,8 @@ function UserManagement() {
                   <th className="text-left p-3">Username</th>
                   <th className="text-left p-3">Email</th>
                   <th className="text-left p-3">Full Name</th>
+                  <th className="text-left p-3">Role</th>
+                  <th className="text-left p-3">Department</th>
                   <th className="text-left p-3">Status</th>
                   <th className="text-left p-3">Actions</th>
                 </tr>
@@ -267,6 +283,16 @@ function UserManagement() {
                     <td className="p-3 font-medium">{user.username}</td>
                     <td className="p-3">{user.email}</td>
                     <td className="p-3">{user.fullName}</td>
+                    <td className="p-3">
+                      <span className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-700">
+                        {user.role || 'N/A'}
+                      </span>
+                    </td>
+                    <td className="p-3">
+                      <span className="px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-700">
+                        {user.department || 'N/A'}
+                      </span>
+                    </td>
                     <td className="p-3">
                       <span
                         className={`px-2 py-1 rounded-full text-xs ${
