@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todo-backend-dev
+  namespace: dev
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: todo-backend-dev
+  template:
+    metadata:
+      labels:
+        app: todo-backend-dev
+      # Prometheus metrics (Worker 1 sẽ đọc cái này)
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/todos/actuator/prometheus"
+        prometheus.io/port: "8080"
+    spec:
+      containers:
+        - name: todo-backend
+          # !!! QUAN TRỌNG: Sửa tên image của bạn ở dòng dưới !!!
+          image: taithanh/todo-backend:v5
+          ports:
+            - containerPort: 8080
+          # Cấu hình kết nối Database
+          env:
+            - name: SPRING_DATASOURCE_URL
+              # "postgres-service" là tên Service của DB ở bước trước
+              value: "jdbc:postgresql://postgres-service.databases.svc.cluster.local:5432/todo_db_dev"
+            - name: SPRING_DATASOURCE_USERNAME
+              value: "postgres"
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: "password123"
+            - name: SPRING_JPA_HIBERNATE_DDL_AUTO
+              value: "update"
+
+          # Giới hạn tài nguyên (Java cần nhiều RAM lúc khởi động)
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "1Gi"
+              cpu: "1"
+
+          # Health Check: Chờ Java 30s mới kiểm tra
+          readinessProbe:
+            httpGet:
+              path: /todos/actuator/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+
+---
+# Mở cổng API ra ngoài (NodePort 31080) để Frontend gọi vào
+apiVersion: v1
+kind: Service
+metadata:
+  name: todo-backend-service
+  namespace: dev
+spec:
+  type: NodePort
+  selector:
+    app: todo-backend-dev
+  ports:
+    - port: 8080
+      targetPort: 8080
+      nodePort: 31081

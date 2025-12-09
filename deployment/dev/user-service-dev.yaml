@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-service
+  namespace: dev
+spec:
+  replicas: 1 # Dev chỉ cần 1 replica
+  selector:
+    matchLabels:
+      app: user-service
+  template:
+    metadata:
+      labels:
+        app: user-service
+        env: dev
+      # Prometheus metrics
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/users/actuator/prometheus"
+        prometheus.io/port: "8081"
+    spec:
+      containers:
+        - name: user-service
+          image: taithanh/user-service:v2
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8081
+          # Cấu hình kết nối Database Dev
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://user-db-service.databases.svc.cluster.local:5432/user_db_dev"
+            - name: SPRING_DATASOURCE_USERNAME
+              value: "postgres"
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: "password123"
+            - name: SPRING_JPA_HIBERNATE_DDL_AUTO
+              value: "create-drop" # Dev: tự động tạo lại schema
+            - name: SPRING_JPA_SHOW_SQL
+              value: "true" # Bật log SQL
+            - name: LOGGING_LEVEL_ROOT
+              value: "DEBUG" # Log level DEBUG
+
+          # Giới hạn tài nguyên nhẹ hơn
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+
+          # Health Check nhanh hơn
+          readinessProbe:
+            httpGet:
+              path: /users/actuator/health
+              port: 8081
+            initialDelaySeconds: 20
+            periodSeconds: 5
+
+---
+# Service NodePort cho Dev
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-service
+  namespace: dev
+spec:
+  type: NodePort
+  selector:
+    app: user-service
+  ports:
+    - port: 8081
+      targetPort: 8081
+      nodePort: 32081 # Dev port range

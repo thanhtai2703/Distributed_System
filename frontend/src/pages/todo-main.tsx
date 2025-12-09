@@ -16,8 +16,29 @@ import * as React from 'react';
 import { produce } from 'immer';
 import axios from 'axios';
 
-// Địa chỉ API (Giữ nguyên nếu đã đúng IP)
-const API_URL = 'http://192.168.1.85:30006/todos/api';
+const getApiUrl = () => {
+  // Ưu tiên 1: Đọc từ ConfigMap của Kubernetes (Runtime)
+  // @ts-ignore
+  if (window.ENV && window.ENV.TODO_API_URL) {
+    console.log('🚀 Đang dùng Config từ K8s:', window.ENV.TODO_API_URL);
+    return window.ENV.TODO_API_URL;
+  }
+  // Ưu tiên 2: Đọc từ file .env (Build time - dùng cho Local Dev)
+  if (import.meta.env.VITE_API_URL) {
+    console.log(
+      '⚠️ Đang dùng biến môi trường .env:',
+      import.meta.env.VITE_API_URL
+    );
+    return import.meta.env.VITE_API_URL;
+  }
+
+  // Ưu tiên 3: Giá trị cứng (Fallback cuối cùng)
+  return 'http://localhost:8080/todos';
+};
+
+// API base URL: prefer env (set at build-time), fallback to relative path
+const API_BASE = getApiUrl();
+const API_URL = API_BASE ? `${API_BASE}/api` : '/todos/api';
 
 function TodoMain() {
   const [value, setValue] = React.useState('');
@@ -203,71 +224,106 @@ function TodoMain() {
   }, [tasks, selectFilter]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-svh w-full">
-      <h1 className={'text-6xl my-5 font-[cursive] font-bold text-shadow-md'}>
-        ToDos (K8s Final V2)
-      </h1>
-      <div className={'flex gap-2 rounded-md flex-stretch w-2/3 '}>
-        <Button
-          className={'hover:cursor-pointer border-2'}
-          onClick={handleSubmit}
-        >
-          Add task
-        </Button>
-        <Input
-          className={cn(
-            'border-4',
-            placeHolder !== 'Add task'
-              ? 'placeholder:text-red-300 italic'
-              : 'placeholder:text-gray-400'
-          )}
-          value={value}
-          type="text"
-          placeholder={placeHolder}
-          onKeyDown={handleKeyDown}
-          onChange={(e) => handleInput(e)}
-        />
-        <Select value={selectFilter} onValueChange={handleFilter}>
-          <SelectTrigger className={'border-4'}>
-            <SelectValue defaultValue={'All'} placeholder={'All'}></SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectLabel>Status</SelectLabel>
-              <SelectItem value={'All'}>All</SelectItem>
-              <SelectItem value={'Completed'}>Completed</SelectItem>
-              <SelectItem value={'Processing'}>Processing</SelectItem>
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-      </div>
+    <div className="min-h-svh w-full bg-gradient-to-br from-slate-100 via-slate-50 to-white dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+      <div className="mx-auto max-w-4xl px-4 py-10">
+        <div className="flex items-center justify-between">
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
+            <span className="inline-flex items-center gap-2">
+              <Star className="w-8 h-8 text-yellow-500" />
+              ToDos
+            </span>
+          </h1>
+          <span className="hidden md:inline text-sm text-slate-500 dark:text-slate-400">
+            K8s Final V2
+          </span>
+        </div>
 
-      <div
-        className={
-          'grid grid-cols-1 gap-2 mt-2 bg-gray-300 p-4 rounded-md w-2/3'
-        }
-      >
-        {listFilter.map((current) => {
-          const todo: TodoType = {
-            id: current.id,
-            content: current.content,
-            icon: <Star className="w-5 h-5 text-yellow-500" />,
-            date: current.date,
-            editMode: current.editMode,
-            checkedTodo: current.checkedTodo,
-          };
-          return (
-            <TodoItem
-              todo={todo}
-              key={current.id}
-              deleteTodo={handleRemove}
-              editTodo={handleEdit}
-              isEditTodo={todo.editMode}
-              changeMode={changeMode}
-              handleComplete={handleChecked}
-            />
-          );
-        })}
+        <div className="mt-6 rounded-2xl border border-slate-200/70 dark:border-slate-700 bg-white/80 dark:bg-slate-800/70 shadow-sm backdrop-blur">
+          <div className="p-4 md:p-6 border-b border-slate-100 dark:border-slate-700">
+            <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_auto] gap-3 md:gap-4 items-center">
+              <Input
+                className={cn(
+                  'border-2 focus-visible:ring-2 focus-visible:ring-offset-0',
+                  placeHolder !== 'Add task'
+                    ? 'placeholder:text-red-300 italic'
+                    : 'placeholder:text-slate-400'
+                )}
+                value={value}
+                type="text"
+                placeholder={placeHolder}
+                onKeyDown={handleKeyDown}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  handleInput(e)
+                }
+              />
+              <Select value={selectFilter} onValueChange={handleFilter}>
+                <SelectTrigger className={'border-2'}>
+                  <SelectValue
+                    defaultValue={'All'}
+                    placeholder={'All'}
+                  ></SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Status</SelectLabel>
+                    <SelectItem value={'All'}>All</SelectItem>
+                    <SelectItem value={'Completed'}>Completed</SelectItem>
+                    <SelectItem value={'Processing'}>Processing</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+              <Button
+                className={
+                  'hover:cursor-pointer border-2 transition-colors duration-200 bg-slate-900 text-white hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600'
+                }
+                onClick={handleSubmit}
+              >
+                Add task
+              </Button>
+            </div>
+          </div>
+
+          <div className="p-4 md:p-6">
+            <div className="flex items-center justify-between mb-3">
+              <div className="text-sm text-slate-500 dark:text-slate-400">
+                <span className="font-medium text-slate-700 dark:text-slate-200">
+                  {tasks.filter((t) => !t.checkedTodo).length}
+                </span>{' '}
+                processing •{' '}
+                <span className="font-medium text-slate-700 dark:text-slate-200">
+                  {tasks.filter((t) => t.checkedTodo).length}
+                </span>{' '}
+                completed
+              </div>
+            </div>
+
+            <div className={'grid grid-cols-1 gap-3'}>
+              {listFilter.map((current) => {
+                const todo: TodoType = {
+                  id: current.id,
+                  content: current.content,
+                  icon: <Star className="w-5 h-5 text-yellow-500" />,
+                  date: current.date,
+                  editMode: current.editMode,
+                  checkedTodo: current.checkedTodo,
+                };
+                return (
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-900/40 p-3 hover:shadow-md transition-shadow">
+                    <TodoItem
+                      todo={todo}
+                      key={current.id}
+                      deleteTodo={handleRemove}
+                      editTodo={handleEdit}
+                      isEditTodo={todo.editMode}
+                      changeMode={changeMode}
+                      handleComplete={handleChecked}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
