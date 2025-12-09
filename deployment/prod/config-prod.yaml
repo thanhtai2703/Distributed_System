@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-config
+  namespace: prod # <--- Dành cho Namespace Prod
+data:
+  config.js: |
+    window.ENV = {
+      TODO_API_URL: "http://192.168.40.121:31080/todos",
+      USER_API_URL: "http://192.168.40.121:31081/users",
+      STATS_API_URL: "http://192.168.40.121:31082/stats"
+    };

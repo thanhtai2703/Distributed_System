@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todo-service
+  namespace: dev
+spec:
+  replicas: 1 # Dev chỉ cần 1 replica
+  selector:
+    matchLabels:
+      app: todo-service
+  template:
+    metadata:
+      labels:
+        app: todo-service
+        env: dev
+      # Prometheus metrics
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/todos/actuator/prometheus"
+        prometheus.io/port: "8080"
+    spec:
+      containers:
+        - name: todo-backend
+          image: taithanh/todo-backend:v5
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          # Cấu hình kết nối Database Dev
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://postgres-service.databases.svc.cluster.local:5432/todo_db_dev"
+            - name: SPRING_DATASOURCE_USERNAME
+              value: "postgres"
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: "password123"
+            - name: SPRING_JPA_HIBERNATE_DDL_AUTO
+              value: "create-drop" # Dev: tự động tạo lại schema mỗi lần restart
+            - name: SPRING_JPA_SHOW_SQL
+              value: "true" # Bật log SQL để debug
+            - name: LOGGING_LEVEL_ROOT
+              value: "DEBUG" # Log level DEBUG cho dev
+
+          # Giới hạn tài nguyên nhẹ hơn cho dev
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+
+          # Health Check nhanh hơn
+          readinessProbe:
+            httpGet:
+              path: /todos/actuator/health
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 5
+
+---
+# Service NodePort cho Dev (port 32xxx)
+apiVersion: v1
+kind: Service
+metadata:
+  name: todo-service
+  namespace: dev
+spec:
+  type: NodePort
+  selector:
+    app: todo-service
+  ports:
+    - port: 8080
+      targetPort: 8080
+      nodePort: 32080 # Dev port range
