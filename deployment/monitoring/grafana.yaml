@@ -46,8 +46,15 @@ spec:
                   - key: role
                     operator: In
                     values:
-                      - ops
+                      - monitoring
       # ---------------------------------------------
+      initContainers:
+        - name: fix-permissions
+          image: busybox
+          command: ["sh", "-c", "chown -R 472:472 /var/lib/grafana"]
+          volumeMounts:
+            - mountPath: /var/lib/grafana
+              name: grafana-storage
       containers:
         - name: grafana
           image: grafana/grafana:latest

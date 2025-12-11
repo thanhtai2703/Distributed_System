@@ -10,15 +10,48 @@ data:
     global:
       scrape_interval: 15s
       evaluation_interval: 15s
-    scrape_configs:
 
-      # [JOB 1] Kube-state-metrics (NGUỒN 1: STATUS)
-      - job_name: 'kube-state-metrics'
+    scrape_configs:
+      # [JOB 1] Kube-state-metrics từ Cluster 1 (CROSS-CLUSTER via NodePort)
+      - job_name: 'kube-state-metrics-cluster1'
+        static_configs:
+          - targets: ['192.168.40.121:31280']
+            labels:
+              cluster: 'cluster1'
+
+      # [JOB 2] Kube-state-metrics (LOCAL Cluster 2)
+      - job_name: 'kube-state-metrics-local'
         static_configs:
           - targets: ['kube-state-metrics.monitoring.svc.cluster.local:8080']
+            labels:
+              cluster: 'cluster2'
 
-      # [JOB 2] Node/Container Metrics (NGUỒN 2: CPU/RAM/NET - QUAN TRỌNG NHẤT)
-      # Quay lại dùng cAdvisor để Dashboard hiển thị đầy đủ thông tin Container
+      # [JOB 3] Spring Boot Services từ Cluster 1 (CROSS-CLUSTER)
+      - job_name: 'todo-service-cluster1'
+        metrics_path: '/todos/actuator/prometheus'
+        static_configs:
+          - targets: ['192.168.40.121:31180']
+            labels:
+              cluster: 'cluster1'
+              service: 'todo-service'
+
+      - job_name: 'user-service-cluster1'
+        metrics_path: '/users/actuator/prometheus'
+        static_configs:
+          - targets: ['192.168.40.121:31181']
+            labels:
+              cluster: 'cluster1'
+              service: 'user-service'
+
+      - job_name: 'stats-service-cluster1'
+        metrics_path: '/stats/actuator/prometheus'
+        static_configs:
+          - targets: ['192.168.40.121:31182']
+            labels:
+              cluster: 'cluster1'
+              service: 'stats-service'
+
+      # [JOB 4] Node metrics từ Cluster 2 (LOCAL)
       - job_name: 'kubernetes-nodes'
         scheme: https
         bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
@@ -26,76 +59,16 @@ data:
           ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
           insecure_skip_verify: true
         kubernetes_sd_configs:
-        - role: node
+          - role: node
         relabel_configs:
-        - action: labelmap
-          regex: __meta_kubernetes_node_label_(.+)
-        - target_label: __address__
-          replacement: kubernetes.default.svc:443
-        - source_labels: [__meta_kubernetes_node_name]
-          regex: (.+)
-          target_label: __metrics_path__
-          # QUAY VỀ CADVISOR ĐỂ LẤY LẠI DỮ LIỆU BỊ MẤT
-          replacement: /api/v1/nodes/${1}/proxy/metrics/cadvisor
-        - source_labels: [__meta_kubernetes_node_name]
-          target_label: node
-
-      # [JOB 3] Storage Metrics (NGUỒN 3: VOLUME - CHỈ LẤY STORAGE)
-      - job_name: 'storage-monitoring'
-        scheme: https
-        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
-        tls_config:
-          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-          insecure_skip_verify: true
-        kubernetes_sd_configs:
-        - role: node
-        relabel_configs:
-        - action: labelmap
-          regex: __meta_kubernetes_node_label_(.+)
-        - target_label: __address__
-          replacement: kubernetes.default.svc:443
-        - source_labels: [__meta_kubernetes_node_name]
-          regex: (.+)
-          target_label: __metrics_path__
-          replacement: /api/v1/nodes/${1}/proxy/metrics
-        - source_labels: [__meta_kubernetes_node_name]
-          target_label: node
-
-        # BỘ LỌC: Chỉ giữ lại thông tin ổ cứng, vứt hết cái khác để tránh nhiễu
-        metric_relabel_configs:
-        - source_labels: [__name__]
-          regex: 'kubelet_volume_stats_.*'
-          action: keep
-
-      # [JOB 4] Service Endpoints (NGUỒN 4: SERVICE KHÁC)
-      - job_name: 'kubernetes-service-endpoints'
-        kubernetes_sd_configs:
-        - role: endpoints
-        relabel_configs:
-        - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scrape]
-          action: keep
-          regex: true
-
-        # --- BỘ LỌC CHỐNG LỖI 8 NODE ---
-        # Chặn không cho quét Kube-State-Metrics lần 2
-        - source_labels: [__meta_kubernetes_service_name]
-          regex: 'kube-state-metrics'
-          action: drop
-        # -------------------------------
-
-        - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scheme]
-          action: replace
-          target_label: __scheme__
-          regex: (https?)
-        - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_path]
-          action: replace
-          target_label: __metrics_path__
-          regex: (.+)
-        - source_labels: [__address__, __meta_kubernetes_service_annotation_prometheus_io_port]
-          action: replace
-          target_label: __address__
-          regex: ([^:]+)(?::\d+)?;(\d+)
-          replacement: $1:$2
+          - action: labelmap
+            regex: __meta_kubernetes_node_label_(.+)
+          - target_label: __address__
+            replacement: kubernetes.default.svc:443
+          - source_labels: [__meta_kubernetes_node_name]
+            regex: (.+)
+            target_label: __metrics_path__
+            replacement: /api/v1/nodes/${1}/proxy/metrics/cadvisor
 
 ---
 # (Các phần dưới giữ nguyên y hệt file cũ)

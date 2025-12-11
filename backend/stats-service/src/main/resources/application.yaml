@@ -14,12 +14,13 @@ microservices:
   user-service:
     url: ${USER_SERVICE_URL:http://localhost:8081/users}
 
-# Actuator endpoints
+# Actuator configuration for Prometheus metrics
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,prometheus
-  endpoint:
-    health:
-      show-details: always
+        include: prometheus,health,info,metrics
+  metrics:
+    export:
+      prometheus:
+        enabled: true
