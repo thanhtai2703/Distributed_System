@@ -36,3 +36,14 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
     # Sửa 5: Khai báo loại database
     database: postgresql
+
+# Actuator configuration for Prometheus metrics
+management:
+  endpoints:
+    web:
+      exposure:
+        include: prometheus,health,info,metrics
+  metrics:
+    export:
+      prometheus:
+        enabled: true

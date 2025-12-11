@@ -36,8 +36,7 @@ spec:
               value: "postgres"
             - name: POSTGRES_PASSWORD
               value: "password123"
-            # --- SỬA LỖI LOST+FOUND ---
-            # Chỉ định thư mục dữ liệu nằm trong thư mục con "pgdata"
+            # Cấu hình thư mục dữ liệu của Postgres nằm trong thư mục con "pgdata"
             # thay vì nằm trực tiếp tại mount point
             - name: PGDATA
               value: "/var/lib/postgresql/data/pgdata"

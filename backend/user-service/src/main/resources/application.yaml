@@ -30,12 +30,13 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
     database: postgresql
 
-# Actuator endpoints
+# Actuator configuration for Prometheus metrics
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,prometheus
-  endpoint:
-    health:
-      show-details: always
+        include: prometheus,health,info,metrics
+  metrics:
+    export:
+      prometheus:
+        enabled: true
