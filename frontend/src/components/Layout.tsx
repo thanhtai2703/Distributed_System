@@ -66,12 +66,7 @@ function Layout() {
 
       {/* Footer */}
       <footer className="bg-white border-t py-4">
-        <div className="max-w-7xl mx-auto px-4 text-center text-sm text-gray-600">
-          <p>
-            Microservices Architecture Demo | Todo Service • User Service •
-            Stats Service
-          </p>
-        </div>
+        <div className="max-w-7xl mx-auto px-4 text-center text-sm text-gray-600"></div>
       </footer>
     </div>
   );

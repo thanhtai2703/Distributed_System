@@ -26,8 +26,14 @@ public class StatsService {
     public StatsResponse getOverallStats() {
         // Call Todo Service to get all todos
         String todoApiUrl = todoServiceUrl + "/api/list-todo";
-        Todo[] todosArray = restTemplate.getForObject(todoApiUrl, Todo[].class);
-        List<Todo> todos = todosArray != null ? Arrays.asList(todosArray) : List.of();
+        List<Todo> todos = List.of();
+        try {
+            Todo[] todosArray = restTemplate.getForObject(todoApiUrl, Todo[].class);
+            todos = todosArray != null ? Arrays.asList(todosArray) : List.of();
+        } catch (Exception e) {
+            // Todo service might not be available, continue with user stats
+            System.out.println("Could not fetch todos: " + e.getMessage());
+        }
 
         // Call User Service to get all users
         String userApiUrl = userServiceUrl + "/api/users";
