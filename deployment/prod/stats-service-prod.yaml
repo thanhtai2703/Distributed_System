@@ -18,9 +18,9 @@ spec:
         prometheus.io/path: "/stats/actuator/prometheus"
         prometheus.io/port: "8082"
     spec:
-      # --- CẤU HÌNH AFFINITY ---
+      # CẤU HÌNH AFFINITY
       affinity:
-        # Ưu tiên chạy trên nhóm App (Worker 2, 3)
+        #Ưu tiên chạy trên nhóm App(Worker 2, 3)
         nodeAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
             - weight: 100
@@ -30,21 +30,20 @@ spec:
                     operator: In
                     values:
                       - app
-
-        # Tự động né nhau: mỗi pod ở 1 node khác nhau
+        # Tự động né nhau (preferred - cho phép scale > số nodes)
         podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            - labelSelector:
-                matchExpressions:
-                  - key: app
-                    operator: In
-                    values:
-                      - stats-service
-              topologyKey: "kubernetes.io/hostname"
-
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - stats-service
+                topologyKey: "kubernetes.io/hostname"
       containers:
         - name: stats-service
-          # !!! QUAN TRỌNG: Sửa tên image của bạn !!!
           image: taithanh/stats-service:v1
           imagePullPolicy: Always
           ports:
@@ -56,7 +55,7 @@ spec:
             - name: USER_SERVICE_URL
               value: "http://user-service:8081/users"
 
-          # Giới hạn tài nguyên (nhẹ hơn vì không có DB)
+          # Giới hạn tài nguyên
           resources:
             requests:
               memory: "256Mi"

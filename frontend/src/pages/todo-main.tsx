@@ -86,7 +86,7 @@ function TodoMain() {
 
       setTasks(mappedData);
     } catch (error) {
-      console.error('Lỗi tải danh sách:', error);
+      console.error('Error loading list:', error);
     }
   };
 
@@ -139,8 +139,8 @@ function TodoMain() {
       setSelectedAssignee('');
       setPlaceHolder('Add task');
     } catch (error) {
-      console.error('Lỗi thêm mới:', error);
-      alert('Không thể kết nối tới Backend hoặc Lỗi dữ liệu!');
+      console.error('Error adding new task:', error);
+      alert('Unable to connect to Backend or Data error!');
     }
   };
 
@@ -190,7 +190,7 @@ function TodoMain() {
       });
       setTasks(newTasks);
     } catch (error) {
-      console.error('Lỗi sửa nội dung:', error);
+      console.error('Error editing content:', error);
     }
   }
 
@@ -227,7 +227,7 @@ function TodoMain() {
       });
       setTasks(newTasks);
     } catch (error) {
-      console.error('Lỗi check hoàn thành:', error);
+      console.error('Check error:', error);
     }
   }
 
@@ -263,9 +263,6 @@ function TodoMain() {
               ToDos
             </span>
           </h1>
-          <span className="hidden md:inline text-sm text-slate-500 dark:text-slate-400">
-            K8s Final V2
-          </span>
         </div>
 
         <div className="mt-6 rounded-2xl border border-slate-200/70 dark:border-slate-700 bg-white/80 dark:bg-slate-800/70 shadow-sm backdrop-blur">

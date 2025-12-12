@@ -12,13 +12,13 @@ spec:
     metadata:
       labels:
         app: todo-service
-      # Prometheus metrics (Worker 1 sẽ đọc cái này)
+      # Prometheus metrics
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/path: "/todos/actuator/prometheus"
         prometheus.io/port: "8080"
     spec:
-      # --- CẤU HÌNH AFFINITY (QUAN TRỌNG) ---
+      # --- CẤU HÌNH AFFINITY
       affinity:
         # 1. Ưu tiên chạy trên nhóm App (Worker 2, 3)
         nodeAffinity:
@@ -31,17 +31,18 @@ spec:
                     values:
                       - app
 
-        # 2. Tự động né nhau: "Đừng xếp tôi chung node với một pod backend khác"
-        # Kết quả: 1 bản ở Worker 2, 1 bản ở Worker 3
+        # 2. Tự động né nhau (preferred - cho phép scale > số nodes)
         podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            - labelSelector:
-                matchExpressions:
-                  - key: app
-                    operator: In
-                    values:
-                      - todo-service
-              topologyKey: "kubernetes.io/hostname"
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - todo-service
+                topologyKey: "kubernetes.io/hostname"
 
       containers:
         - name: todo-backend

@@ -61,7 +61,7 @@ function StatsDashboard() {
     } catch (error: any) {
       console.error('Error fetching stats:', error);
       setServiceStatus('offline');
-      setErrorMessage('⚠️ Stats Service đang không khả dụng');
+      setErrorMessage('⚠️ Stats Service is not responding.');
       setLoading(false);
     }
   };
@@ -113,8 +113,7 @@ function StatsDashboard() {
           <div>
             <p className="text-red-700 font-medium">{errorMessage}</p>
             <p className="text-red-600 text-sm mt-1">
-              Stats Service không phản hồi. Các service khác vẫn hoạt động bình
-              thường.
+              Stats Service not responding.
             </p>
             <Button
               onClick={fetchStats}
@@ -122,7 +121,7 @@ function StatsDashboard() {
               size="sm"
               variant="outline"
             >
-              Thử lại
+              Retry
             </Button>
           </div>
         </div>
@@ -148,7 +147,7 @@ function StatsDashboard() {
         <div className="text-center py-20 text-gray-500">
           <AlertCircle className="w-20 h-20 mx-auto mb-4 text-red-400" />
           <p className="text-xl font-medium">Stats Service Offline</p>
-          <p className="text-sm mt-2">Không thể tải dữ liệu thống kê</p>
+          <p className="text-sm mt-2">Unable to load statistics data</p>
         </div>
       ) : stats ? (
         <>
@@ -158,7 +157,7 @@ function StatsDashboard() {
             <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-600 text-sm mb-1">Total Todos</p>
+                  <p className="text-gray-600 text-sm mb-1">Total Todo</p>
                   <p className="text-3xl font-bold text-gray-800">
                     {stats.totalTodos}
                   </p>
@@ -239,7 +238,7 @@ function StatsDashboard() {
                   {stats.completionRate.toFixed(1)}%
                 </p>
                 <p className="text-blue-100 text-sm mt-2">
-                  {stats.completedTodos} out of {stats.totalTodos} todos
+                  {stats.completedTodos} out of {stats.totalTodos} todo
                   completed
                 </p>
               </div>
@@ -296,9 +295,6 @@ function StatsDashboard() {
           </div>
 
           {/* Refresh Info */}
-          <div className="mt-6 text-center text-sm text-gray-500">
-            <p>Dữ liệu tự động cập nhật mỗi 10 giây</p>
-          </div>
         </>
       ) : null}
     </div>

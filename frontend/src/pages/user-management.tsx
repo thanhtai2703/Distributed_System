@@ -94,20 +94,20 @@ function UserManagement() {
       setRole('');
       setDepartment('');
       setErrorMessage('');
-      setSuccessMessage('✅ Thêm user thành công!');
+      setSuccessMessage('✅ User added successfully!');
       setServiceStatus('online');
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error: any) {
       console.error('Error adding user:', error);
       if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
         setServiceStatus('offline');
-        setErrorMessage('❌ User Service không phản hồi (timeout)');
+        setErrorMessage('❌ User Service not responding (timeout)');
       } else if (error.response?.status === 409) {
-        setErrorMessage('❌ Username hoặc Email đã tồn tại!');
+        setErrorMessage('❌ Username or Email already exists!');
       } else {
         setServiceStatus('offline');
         setErrorMessage(
-          '❌ Không thể kết nối tới User Service. Service có thể đang down.'
+          '❌ Unable to connect to User Service. The service may be down.'
         );
       }
     }
@@ -118,12 +118,12 @@ function UserManagement() {
       await axios.delete(API_URL + `/user/${id}`, { timeout: 5000 });
       setUsers(users.filter((u) => u.id !== id));
       setErrorMessage('');
-      setSuccessMessage('✅ Xóa user thành công!');
+      setSuccessMessage('✅ User deleted successfully!');
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error) {
       console.error('Error deleting user:', error);
       setServiceStatus('offline');
-      setErrorMessage('❌ Không thể xóa user. Service có thể đang down.');
+      setErrorMessage('❌ Unable to delete user. The service may be down.');
     }
   };
 
@@ -176,7 +176,7 @@ function UserManagement() {
       <div className="bg-white rounded-lg shadow-md p-6 mb-6">
         <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
           <UserPlus className="w-5 h-5" />
-          Thêm User Mới
+          Add new User
         </h2>
         <div className="grid grid-cols-2 gap-4">
           <div>
@@ -237,14 +237,14 @@ function UserManagement() {
           disabled={serviceStatus === 'offline'}
         >
           <UserPlus className="w-4 h-4 mr-2" />
-          {serviceStatus === 'offline' ? 'Service Offline' : 'Thêm User'}
+          {serviceStatus === 'offline' ? 'Service Offline' : 'Add User'}
         </Button>
       </div>
 
       {/* User List */}
       <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-xl font-semibold mb-4">
-          Danh Sách Users ({users.length})
+          List of Users ({users.length})
         </h2>
 
         {serviceStatus === 'offline' ? (
