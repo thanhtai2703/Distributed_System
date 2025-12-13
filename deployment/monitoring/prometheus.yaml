@@ -10,27 +10,27 @@ data:
     global:
       scrape_interval: 15s
       evaluation_interval: 15s
-
     scrape_configs:
-      # [JOB 1] Kube-state-metrics từ Cluster 1 (CROSS-CLUSTER via NodePort)
+      # [JOB 1] Kube-state-metrics từ Cluster 1 (NodePort 31280)
       - job_name: 'kube-state-metrics-cluster1'
         static_configs:
+          # Thay IP này bằng IP Worker Node Cluster 1 của bạn
           - targets: ['192.168.40.121:31280']
             labels:
               cluster: 'cluster1'
 
-      # [JOB 2] Kube-state-metrics (LOCAL Cluster 2)
+      # [JOB 2] Kube-state-metrics (Local Cluster 2)
       - job_name: 'kube-state-metrics-local'
         static_configs:
           - targets: ['kube-state-metrics.monitoring.svc.cluster.local:8080']
             labels:
               cluster: 'cluster2'
 
-      # [JOB 3] Spring Boot Services từ Cluster 1 (CROSS-CLUSTER)
+      # [JOB 3] Spring Boot Services từ Cluster 1
       - job_name: 'todo-service-cluster1'
         metrics_path: '/todos/actuator/prometheus'
         static_configs:
-          - targets: ['192.168.40.121:31180']
+          - targets: ['192.168.40.121:31080'] 
             labels:
               cluster: 'cluster1'
               service: 'todo-service'
@@ -38,7 +38,7 @@ data:
       - job_name: 'user-service-cluster1'
         metrics_path: '/users/actuator/prometheus'
         static_configs:
-          - targets: ['192.168.40.121:31181']
+          - targets: ['192.168.40.121:31081']
             labels:
               cluster: 'cluster1'
               service: 'user-service'
@@ -46,12 +46,36 @@ data:
       - job_name: 'stats-service-cluster1'
         metrics_path: '/stats/actuator/prometheus'
         static_configs:
-          - targets: ['192.168.40.121:31182']
+          - targets: ['192.168.40.121:31082']
             labels:
               cluster: 'cluster1'
               service: 'stats-service'
 
-      # [JOB 4] Node metrics từ Cluster 2 (LOCAL)
+      # --- [QUAN TRỌNG: ĐÂY LÀ PHẦN THÊM MỚI BẠN ĐANG THIẾU] ---
+      
+      # [JOB 5] Node Exporter từ Cluster 1
+      - job_name: 'node-exporter-cluster1'
+        static_configs:
+          # --- Cấu hình cho Node Worker 1 ---
+          - targets: ['192.168.40.121:31091']
+            labels:
+              cluster: 'cluster1'
+              # Gán cứng tên Hostname trùng với tên trong lệnh "kubectl get nodes"
+              instance: 'worker1' 
+              nodename: 'worker1'
+          # --- Cấu hình cho Node Worker 2 (Nếu có) ---
+          - targets: ['192.168.40.122:31091'] # Thay IP của worker 2
+            labels:
+              cluster: 'cluster1'
+              instance: 'worker2'
+              nodename: 'worker2'
+              # --- Cấu hình cho Node Worker 2 (Nếu có) ---
+          - targets: ['192.168.40.123:31091'] # Thay IP của worker 3
+            labels:
+              cluster: 'cluster1'
+              instance: 'worker3'
+              nodename: 'worker3'
+      # [JOB 4] Node metrics từ Cluster 2 (Local)
       - job_name: 'kubernetes-nodes'
         scheme: https
         bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
@@ -71,7 +95,6 @@ data:
             replacement: /api/v1/nodes/${1}/proxy/metrics/cadvisor
 
 ---
-# (Các phần dưới giữ nguyên y hệt file cũ)
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -123,6 +146,7 @@ spec:
       labels:
         app: prometheus-server
     spec:
+      # --- ĐÃ SỬA AFFINITY CHO KHỚP VỚI CLUSTER 2 ---
       affinity:
         nodeAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -132,7 +156,7 @@ spec:
                   - key: role
                     operator: In
                     values:
-                      - ops
+                      - monitoring # <--- Sửa từ 'ops' thành 'monitoring'
       initContainers:
         - name: fix-permissions
           image: busybox
@@ -170,7 +194,6 @@ spec:
           persistentVolumeClaim:
             claimName: prometheus-pvc
 ---
-# PersistentVolumeClaim for Prometheus
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:

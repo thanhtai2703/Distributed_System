@@ -126,3 +126,30 @@ spec:
         resources:
           requests:
             storage: 2Gi
+---
+# SERVICE FOR TODO DB ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+  namespace: databases
+spec:
+  selector:
+    app: postgres-db
+  ports:
+    - port: 5432
+      targetPort: 5432
+
+---
+# SERVICE FOR USER DB ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-db-service
+  namespace: databases
+spec:
+  selector:
+    app: user-db
+  ports:
+    - port: 5432
+      targetPort: 5432
