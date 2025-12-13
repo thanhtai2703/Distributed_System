@@ -31,18 +31,16 @@ spec:
                     values:
                       - app
 
-        # Tự động né nhau (preferred - cho phép scale > số nodes)
+        # Tự động né nhau: mỗi pod ở 1 node khác nhau
         podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - weight: 100
-              podAffinityTerm:
-                labelSelector:
-                  matchExpressions:
-                    - key: app
-                      operator: In
-                      values:
-                        - user-service
-                topologyKey: "kubernetes.io/hostname"
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - user-service
+              topologyKey: "kubernetes.io/hostname"
 
       containers:
         - name: user-service
@@ -86,10 +84,11 @@ metadata:
   name: user-service
   namespace: prod
 spec:
-  type: NodePort
+  type: LoadBalancer
+  loadBalancerIP: 192.168.40.201
   selector:
     app: user-service
   ports:
     - port: 8081
       targetPort: 8081
-      nodePort: 31081
+      #nodePort: 31081
