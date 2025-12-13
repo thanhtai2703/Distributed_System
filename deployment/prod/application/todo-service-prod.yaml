@@ -65,11 +65,11 @@ spec:
           # Giới hạn tài nguyên (Java cần nhiều RAM lúc khởi động)
           resources:
             requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
               memory: "512Mi"
               cpu: "500m"
-            limits:
-              memory: "1Gi"
-              cpu: "1"
 
           # Health Check: Chờ Java 30s mới kiểm tra
           readinessProbe:
@@ -87,10 +87,11 @@ metadata:
   name: todo-service
   namespace: prod
 spec:
-  type: NodePort
+  type: LoadBalancer
+  loadBalancerIP: 192.168.40.200
   selector:
     app: todo-service
   ports:
     - port: 8080
       targetPort: 8080
-      nodePort: 31080
+      #nodePort: 31080
