@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: kube-vip-ds
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      name: kube-vip-ds
+  template:
+    metadata:
+      labels:
+        name: kube-vip-ds
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node-role.kubernetes.io/master
+                    operator: Exists
+                  - key: node-role.kubernetes.io/worker
+                    operator: DoesNotExist
+      tolerations:
+        - effect: NoSchedule
+          operator: Exists
+        - effect: NoExecute
+          operator: Exists
+      serviceAccountName: kube-vip
+      hostNetwork: true
+      containers:
+        - name: kube-vip
+          image: ghcr.io/kube-vip/kube-vip:v0.6.0
+          imagePullPolicy: Always
+          securityContext:
+            capabilities:
+              add:
+                - NET_ADMIN
+                - NET_RAW
+          env:
+            # 1. Tên card mạng
+            - name: vip_interface
+              value: ens33
+
+            # 2. Cấu hình chế độ ARP
+            - name: vip_arp
+              value: "true"
+
+            # 3. Tắt chế độ Control Plane (vì  LoadBalancer cho Service)
+            - name: cp_enable
+              value: "false"
+            - name: cp_namespace
+              value: kube-system
+
+            # 4. Bật chế độ Service LoadBalancer
+            - name: svc_enable
+              value: "true"
+
+            # 5. Dải IP VIP bạn muốn cấp phát
+            - name: address
+              value: 192.168.40.200-192.168.40.210

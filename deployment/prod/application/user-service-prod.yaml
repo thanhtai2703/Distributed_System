@@ -33,7 +33,7 @@ spec:
 
         # Tự động né nhau: mỗi pod ở 1 node khác nhau
         podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
+          preferredDuringSchedulingIgnoredDuringExecution:
             - labelSelector:
                 matchExpressions:
                   - key: app
