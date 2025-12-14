@@ -41,7 +41,10 @@ spec:
                     values:
                       - user-service
               topologyKey: "kubernetes.io/hostname"
+<<<<<<< HEAD
 
+=======
+>>>>>>> 684ef98efa51d6bd715b7ab06662d3d65dcf8f66
       containers:
         - name: user-service
           image: taithanh/user-service:v3
