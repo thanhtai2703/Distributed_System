@@ -32,19 +32,17 @@ spec:
                       - app
 
         # Tự động né nhau: mỗi pod ở 1 node khác nhau
-        podAntiAffinity:
+                podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
-            - labelSelector:
-                matchExpressions:
-                  - key: app
-                    operator: In
-                    values:
-                      - user-service
-              topologyKey: "kubernetes.io/hostname"
-<<<<<<< HEAD
-
-=======
->>>>>>> 684ef98efa51d6bd715b7ab06662d3d65dcf8f66
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - user-service
+                topologyKey: "kubernetes.io/hostname"
       containers:
         - name: user-service
           image: taithanh/user-service:v3
