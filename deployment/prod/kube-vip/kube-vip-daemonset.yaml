@@ -17,10 +17,11 @@ spec:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
               - matchExpressions:
-                  - key: node-role.kubernetes.io/master
+                  # SỬA 1: Đổi master thành control-plane để tránh Warning
+                  - key: node-role.kubernetes.io/control-plane
                     operator: Exists
-                  - key: node-role.kubernetes.io/worker
-                    operator: DoesNotExist
+                  # SỬA 2: Xóa dòng check worker để đảm bảo nó chạy trên node hiện tại của bạn
+                  # (Nếu node bạn là worker thuần túy thì xóa luôn cả block affinity này cũng được)
       tolerations:
         - effect: NoSchedule
           operator: Exists
@@ -32,30 +33,24 @@ spec:
         - name: kube-vip
           image: ghcr.io/kube-vip/kube-vip:v0.6.0
           imagePullPolicy: Always
+          args:
+            - manager
           securityContext:
             capabilities:
               add:
                 - NET_ADMIN
                 - NET_RAW
           env:
-            # 1. Tên card mạng
             - name: vip_interface
               value: ens33
 
-            # 2. Cấu hình chế độ ARP
             - name: vip_arp
               value: "true"
-
-            # 3. Tắt chế độ Control Plane (vì  LoadBalancer cho Service)
             - name: cp_enable
               value: "false"
             - name: cp_namespace
               value: kube-system
-
-            # 4. Bật chế độ Service LoadBalancer
             - name: svc_enable
               value: "true"
-
-            # 5. Dải IP VIP bạn muốn cấp phát
             - name: address
               value: 192.168.40.200-192.168.40.210
