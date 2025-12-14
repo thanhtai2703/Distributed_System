@@ -32,7 +32,7 @@ spec:
                       - app
 
         # Tự động né nhau: mỗi pod ở 1 node khác nhau
-                podAntiAffinity:
+        podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
             - weight: 100
               podAffinityTerm:
