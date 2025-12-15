@@ -17,11 +17,10 @@ spec:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
               - matchExpressions:
-                  # SỬA 1: Đổi master thành control-plane để tránh Warning
                   - key: node-role.kubernetes.io/control-plane
                     operator: Exists
-                  # SỬA 2: Xóa dòng check worker để đảm bảo nó chạy trên node hiện tại của bạn
-                  # (Nếu node bạn là worker thuần túy thì xóa luôn cả block affinity này cũng được)
+                  - key: node-role.kubernetes.io/worker
+                    operator: DoesNotExist
       tolerations:
         - effect: NoSchedule
           operator: Exists
@@ -41,16 +40,24 @@ spec:
                 - NET_ADMIN
                 - NET_RAW
           env:
+            # Tên card mạng
             - name: vip_interface
               value: ens33
 
+            # Cấu hình chế độ ARP
             - name: vip_arp
               value: "true"
+
+            #Tắt chế độ Control Plane
             - name: cp_enable
               value: "false"
             - name: cp_namespace
               value: kube-system
+
+            #Bật Service LoadBalancer
             - name: svc_enable
               value: "true"
+
+            #Dải IP VIP bạn cấp phát
             - name: address
               value: 192.168.40.200-192.168.40.210
