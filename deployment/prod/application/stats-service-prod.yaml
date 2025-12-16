@@ -81,8 +81,9 @@ metadata:
   name: stats-service
   namespace: prod
 spec:
-  type: LoadBalancer
-  loadBalancerIP: 192.168.40.202
+  #type: LoadBalancer
+  #loadBalancerIP: 192.168.40.202
+  type: ClusterIP
   selector:
     app: stats-service
   ports:

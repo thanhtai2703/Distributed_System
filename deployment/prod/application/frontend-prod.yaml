@@ -70,8 +70,9 @@ metadata:
   name: todo-frontend-service
   namespace: prod
 spec:
-  type: LoadBalancer
-  loadBalancerIP: 192.168.40.203
+  #type: LoadBalancer
+  #loadBalancerIP: 192.168.40.203
+  type: ClusterIP
   selector:
     app: todo-frontend-prod
   ports:
