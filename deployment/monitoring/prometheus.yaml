@@ -30,7 +30,8 @@ data:
       - job_name: 'todo-service-cluster1'
         metrics_path: '/todos/actuator/prometheus'
         static_configs:
-          - targets: ['192.168.40.200:8080']
+          #- targets: ['192.168.40.200:8080']
+          - targets: ['192.168.40.203:80']
             labels:
               cluster: 'cluster1'
               service: 'todo-service'
@@ -38,7 +39,8 @@ data:
       - job_name: 'user-service-cluster1'
         metrics_path: '/users/actuator/prometheus'
         static_configs:
-          - targets: ['192.168.40.201:8081']
+          #- targets: ['192.168.40.201:8081']
+          - targets: ['192.168.40.203:80']
             labels:
               cluster: 'cluster1'
               service: 'user-service'
@@ -46,7 +48,8 @@ data:
       - job_name: 'stats-service-cluster1'
         metrics_path: '/stats/actuator/prometheus'
         static_configs:
-          - targets: ['192.168.40.202:8082']
+          #- targets: ['192.168.40.202:8082']
+          - targets: ['192.168.40.203:80']
             labels:
               cluster: 'cluster1'
               service: 'stats-service'
