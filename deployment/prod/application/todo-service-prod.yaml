@@ -79,7 +79,6 @@ spec:
             periodSeconds: 10
 
 ---
-# Mở cổng API ra ngoài (NodePort 31080) để Frontend gọi vào
 apiVersion: v1
 kind: Service
 metadata:
