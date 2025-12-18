@@ -6,7 +6,8 @@ metadata:
 data:
   config.js: |
     window.ENV = {
-      TODO_API_URL: "http://192.168.40.200:8080/todos",
-      USER_API_URL: "http://192.168.40.201:8081/users",
-      STATS_API_URL: "http://192.168.40.202:8082/stats"
+      // Chỉ cần trỏ vào path, trình duyệt sẽ tự hiểu là cùng domain hiện tại
+      TODO_API_URL: "/todos",
+      USER_API_URL: "/users",
+      STATS_API_URL: "/stats"
     };

@@ -13,7 +13,7 @@ spec:
       labels:
         app: todo-frontend-prod
     spec:
-      # --- Affinity & Anti-Affinity (Giữ nguyên cấu hình cũ của bạn) ---
+      # --- Affinity & Anti-Affinity
       affinity:
         nodeAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -42,7 +42,7 @@ spec:
           ports:
             - containerPort: 80
 
-          # Cấu hình tài nguyên (Resource Quota)
+          # Cấu hình tài nguyên
           resources:
             requests:
               memory: "64Mi"
@@ -51,14 +51,13 @@ spec:
               memory: "128Mi"
               cpu: "200m"
 
-          # [Mount 1] Gắn file config vào container
+          # Gắn file config vào container
           volumeMounts:
             - name: config-volume
-              # Đường dẫn này cho Nginx container
               mountPath: /usr/share/nginx/html/config.js
-              subPath: config.js # Quan trọng: Chỉ thay file, không thay folder
+              subPath: config.js
 
-      # --- Volumes Definition (Nằm ngang hàng với containers) ---
+      # --- Volumes
       volumes:
         - name: config-volume
           configMap:
