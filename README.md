@@ -39,8 +39,8 @@ kubectl patch svc longhorn-frontend -n longhorn-system -p '{"spec":{"type":"Node
 
 ```bash
 # Label nodes theo role
-kubectl label nodes worker1 role=app
-kubectl label nodes worker2 role=app
+kubectl label nodes <name_of_worker1> role=app
+kubectl label nodes <name_of_worker2> role=app
 # Tạo namespaces
 kubectl create namespace databases
 kubectl create namespace prod
