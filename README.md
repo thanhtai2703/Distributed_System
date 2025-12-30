@@ -6,7 +6,9 @@
 
 - 1 master + 2 workers (role=app)
 - Chạy: Longhorn, Databases, Application services
-  **Cluster 2 (Monitoring Cluster):**
+
+**Cluster 2 (Monitoring Cluster):**
+
 - 1 master + 1 worker (role=monitoring)
 - Chạy: Longhorn, Prometheus, Grafana, Kube-state-metrics
 - Cross-cluster metrics collection từ Cluster 1
@@ -104,7 +106,7 @@ kubectl patch deployment metrics-server -n kube-system --type='json' -p='[{"op":
 kubectl get deployment metrics-server -n kube-system
 ```
 
-**áp dụng hpa controller**
+**Áp dụng hpa controller**
 
 ```bash
 kubectl deployment/prod/application/hpa.yaml
