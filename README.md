@@ -68,7 +68,7 @@ kubectl apply -f deployment/prod/application/todo-service-prod.yaml
 kubectl apply -f deployment/prod/application/user-service-prod.yaml
 kubectl apply -f deployment/prod/application/stats-service-prod.yaml
 # Deploy frontend
-kubectl apply -f deployment/prod/frontend-prod.yaml
+kubectl apply -f deployment/prod/application/frontend-prod.yaml
 # Kiểm tra
 kubectl get pods -n prod --watch```
 ### 5. Expose Metrics Endpoints
