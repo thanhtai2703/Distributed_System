@@ -20,7 +20,6 @@ spec:
     spec:
       # --- CẤU HÌNH AFFINITY
       affinity:
-        # 1. Ưu tiên chạy trên nhóm App (Worker 2, 3)
         nodeAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
             - weight: 100
@@ -30,8 +29,6 @@ spec:
                     operator: In
                     values:
                       - app
-
-        # 2. Tự động né nhau (preferred - cho phép scale > số nodes)
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
             - weight: 100
