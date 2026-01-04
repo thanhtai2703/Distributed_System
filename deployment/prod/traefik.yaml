@@ -3,7 +3,6 @@ kind: Service
 metadata:
   name: traefik
   namespace: kube-system
-  # Giữ lại các label cũ của k3s để không làm hỏng setup mặc định
   labels:
     app.kubernetes.io/instance: traefik-kube-system
     app.kubernetes.io/name: traefik

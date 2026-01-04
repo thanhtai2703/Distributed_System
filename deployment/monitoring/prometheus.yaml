@@ -11,7 +11,7 @@ data:
       scrape_interval: 15s
       evaluation_interval: 15s
     scrape_configs:
-      # [JOB 1] Kube-state-metrics từ Cluster 1 (NodePort 31280)
+      # [JOB 1] Kube-state-metrics từ Cluster 1
       - job_name: 'kube-state-metrics-cluster1'
         static_configs:
           # Thay IP này bằng IP Worker Node Cluster 1 của bạn
@@ -30,54 +30,42 @@ data:
       - job_name: 'todo-service-cluster1'
         metrics_path: '/todos/actuator/prometheus'
         static_configs:
-          #- targets: ['192.168.40.200:8080']
           - targets: ['192.168.40.203:80']
             labels:
               cluster: 'cluster1'
               service: 'todo-service'
-
       - job_name: 'user-service-cluster1'
         metrics_path: '/users/actuator/prometheus'
         static_configs:
-          #- targets: ['192.168.40.201:8081']
           - targets: ['192.168.40.203:80']
             labels:
               cluster: 'cluster1'
               service: 'user-service'
-
       - job_name: 'stats-service-cluster1'
         metrics_path: '/stats/actuator/prometheus'
         static_configs:
-          #- targets: ['192.168.40.202:8082']
           - targets: ['192.168.40.203:80']
             labels:
               cluster: 'cluster1'
               service: 'stats-service'
-
-      # --- [QUAN TRỌNG: ĐÂY LÀ PHẦN THÊM MỚI BẠN ĐANG THIẾU] ---
-
       # [JOB 5] Node Exporter từ Cluster 1
       - job_name: 'node-exporter-cluster1'
         static_configs:
-          # --- Cấu hình cho Node Worker 1 ---
           - targets: ['192.168.40.121:31091']
             labels:
               cluster: 'cluster1'
-              # Gán cứng tên Hostname trùng với tên trong lệnh "kubectl get nodes"
+              instance: 'master1'
+              nodename: 'master1'
+          - targets: ['192.168.40.122:31091']
+            labels:
+              cluster: 'cluster1'
               instance: 'worker1'
               nodename: 'worker1'
-          # --- Cấu hình cho Node Worker 2 (Nếu có) ---
-          - targets: ['192.168.40.122:31091'] # Thay IP của worker 2
+          - targets: ['192.168.40.123:31091']
             labels:
               cluster: 'cluster1'
               instance: 'worker2'
               nodename: 'worker2'
-              # --- Cấu hình cho Node Worker 2 (Nếu có) ---
-          - targets: ['192.168.40.123:31091'] # Thay IP của worker 3
-            labels:
-              cluster: 'cluster1'
-              instance: 'worker3'
-              nodename: 'worker3'
       # [JOB 4] Node metrics từ Cluster 2 (Local)
       - job_name: 'kubernetes-nodes'
         scheme: https

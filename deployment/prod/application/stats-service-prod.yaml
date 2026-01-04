@@ -12,15 +12,12 @@ spec:
     metadata:
       labels:
         app: stats-service
-      # Prometheus metrics
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/path: "/stats/actuator/prometheus"
         prometheus.io/port: "8082"
     spec:
-      # --- CẤU HÌNH AFFINITY ---
       affinity:
-        # Ưu tiên chạy trên nhóm App (Worker 2, 3)
         nodeAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
             - weight: 100
@@ -30,10 +27,9 @@ spec:
                     operator: In
                     values:
                       - app
-
         # Tự động né nhau: mỗi pod ở 1 node khác nhau
         podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
+          preferredDuringSchedulingIgnoredDuringExecution:
             - labelSelector:
                 matchExpressions:
                   - key: app
